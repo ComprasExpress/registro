@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro de clientes · Compras Express</title>
+<style>
+  html, body { margin: 0; background: #F5F4F2; }
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Open Sans', system-ui, sans-serif; color: #6F6A64; }
+  .carga { text-align: center; font-weight: 600; font-size: 16px; padding: 30px; }
+  .rueda { width: 54px; height: 54px; margin: 0 auto 14px; border-radius: 50%; border: 6px solid #FDEEDF; border-top-color: #C12C2D; animation: gira .8s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="carga" id="carga"><div class="rueda"></div>Cargando el registro…</div>
+<script>
+/* Cargador del Registro de clientes de Compras Express.
+   Trae el formulario desde Apps Script (sin sesión de Google) y lo muestra aquí,
+   por eso abre bien aunque el cliente tenga varias cuentas de Google.
+   Kiosko: agregar ?modo=kiosko al final del link de esta página. */
+(function () {
+  var API = 'https://script.google.com/macros/s/AKfycbwIZV5l6k08mQeFZqbKkyTDWSkf0SwTlzRx88GBXCbSEIDpeTW3_6JkQgpeB4-6zNSf/exec';
+  var q = new URLSearchParams(location.search);
+  var EXTRA = (q.get('modo') === 'kiosko' ? '&modo=kiosko' : '') + (q.get('embed') === '1' ? '&embed=1' : '');
+  function cargar(intento) {
+    fetch(API + '?formato=pagina' + EXTRA, { credentials: 'omit' })
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        if (html.indexOf('id="form"') < 0) throw new Error('respuesta inesperada');
+        html = html.replace('"__API__"', JSON.stringify(API));
+        document.open(); document.write(html); document.close();
+      })
+      .catch(function () {
+        if (intento < 2) { setTimeout(function () { cargar(intento + 1); }, 1500); return; }
+        document.getElementById('carga').innerHTML = 'No pudimos cargar el registro.<br>Revisá tu internet y recargá la página.';
+      });
+  }
+  cargar(0);
+})();
+</script>
+</body>
+</html>
